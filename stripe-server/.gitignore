@@ -140,3 +140,6 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# service-account
+service-account.json

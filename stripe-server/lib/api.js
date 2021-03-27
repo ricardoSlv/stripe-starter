@@ -8,6 +8,7 @@ const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
 exports.app = express_1.default();
 const checkout_1 = require("checkout");
+const auth_1 = require("utils/auth");
 function runAsync(callback) {
     return (req, res, next) => {
         callback(req, res, next).catch(next);
@@ -23,6 +24,7 @@ exports.app.use(express_1.default.json({
     }
 }));
 exports.app.use(cors_1.default({ origin: true }));
+exports.app.use(auth_1.decodeJWT);
 exports.app.post('/test', (req, res) => {
     const amount = req.body.amount;
     res.status(200).send({ with_tax: amount * 7 });
@@ -35,5 +37,33 @@ exports.app.post('/payments', runAsync(async (req, res) => {
     res.send(await payments_1.createPaymentIntent(req.body.amount));
 }));
 const webhooks_1 = require("webhooks");
+const customers_1 = require("customers");
+const billing_1 = require("billing");
 exports.app.post('/hooks', runAsync(webhooks_1.handleStripeWebHook));
+exports.app.post('/wallet', runAsync(async (req, res) => {
+    const user = auth_1.validateUser(req);
+    const setupIntent = await customers_1.createSetupIntent(user.uid);
+    res.send(setupIntent);
+}));
+exports.app.get('/wallet', runAsync(async (req, res) => {
+    const user = auth_1.validateUser(req);
+    const wallet = await customers_1.listPaymentCards(user.uid);
+    res.send(wallet.data);
+}));
+exports.app.post('/subscriptions', runAsync(async (req, res) => {
+    const user = auth_1.validateUser(req);
+    const { plan, paymentMethod } = req.body;
+    const subscription = await billing_1.createSubscription(user.uid, plan, paymentMethod);
+    res.send(subscription);
+}));
+exports.app.get('/subscriptions', runAsync(async (req, res) => {
+    const user = auth_1.validateUser(req);
+    const subscriptions = await billing_1.listSubscriptions(user.uid);
+    res.send(subscriptions.data);
+}));
+exports.app.patch('/subscriptions/:id', runAsync(async (req, res) => {
+    const user = auth_1.validateUser(req);
+    await billing_1.cancelSubscription(user.uid, req.params.id);
+    res.status(200).jsonp('Success');
+}));
 //# sourceMappingURL=api.js.map
