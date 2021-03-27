@@ -99,6 +99,6 @@ app.patch(
   runAsync(async (req: Request, res: Response) => {
     const user = validateUser(req)
     await cancelSubscription(user.uid, req.params.id)
-    res.status(200).jsonp('Success')
+    res.send(200).jsonp('Success')
   })
 )

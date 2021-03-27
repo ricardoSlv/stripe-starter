@@ -64,6 +64,6 @@ exports.app.get('/subscriptions', runAsync(async (req, res) => {
 exports.app.patch('/subscriptions/:id', runAsync(async (req, res) => {
     const user = auth_1.validateUser(req);
     await billing_1.cancelSubscription(user.uid, req.params.id);
-    res.status(200).jsonp('Success');
+    res.send(200).jsonp('Success');
 }));
 //# sourceMappingURL=api.js.map
